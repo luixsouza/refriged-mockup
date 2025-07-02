@@ -1,0 +1,126 @@
+# Configuracoes de servidor
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+
+spring:
+  application:
+    name: refrigeracao-microservice
+  
+  # Configuracao do RabbitMQ
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    connection-timeout: 60000
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+      retry:
+        enabled: true
+        initial-interval: 1000
+        max-attempts: 3
+        max-interval: 10000
+        multiplier: 2
+    listener:
+      simple:
+        acknowledge-mode: auto
+        concurrency: 1
+        max-concurrency: 5
+        prefetch: 1
+        retry:
+          enabled: true
+          initial-interval: 1000
+          max-attempts: 3
+          max-interval: 10000
+          multiplier: 2
+
+  # Configuracao do Jackson para JSON
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      indent-output: true
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+    time-zone: America/Sao_Paulo
+
+  # Configuracao do Actuator
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,metrics,prometheus
+        base-path: /actuator
+    endpoint:
+      health:
+        show-details: always
+    health:
+      rabbitmq:
+        enabled: true
+
+# Configuracao de Logging
+logging:
+  level:
+    com.industrial.refrigeracao: INFO
+    org.springframework.amqp: WARN
+    org.springframework.web: WARN
+    org.springframework.boot: WARN
+    root: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{36}] - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{36}] - %msg%n"
+  file:
+    name: logs/refrigeracao-microservice.log
+    max-size: 10MB
+    max-history: 30
+
+# Configuracoes customizadas da aplicação
+app:
+  refrigeracao:
+    # Configuracoes de geração de dados
+    data-generation:
+      temperatura-min: -30.0
+      temperatura-max: 5.0
+      pressao-min: 1.0
+      pressao-max: 15.0
+      umidade-min: 40.0
+      umidade-max: 90.0
+      consumo-min: 5.0
+      consumo-max: 50.0
+      rpm-min: 1000.0
+      rpm-max: 3500.0
+    
+    # Configuracoes de alertas
+    alertas:
+      temperatura-critica-min: -30.0
+      temperatura-critica-max: 0.0
+      pressao-critica-min: 0.5
+      pressao-critica-max: 20.0
+      consumo-elevado-threshold: 40.0
+    
+    # Configuracoes de monitoramento
+    monitoramento:
+      intervalo-coleta-segundos: 30
+      intervalo-envio-rabbitmq-segundos: 60
+      max-tentativas-envio: 3
+
+# Configuracao de CORS
+cors:
+  allowed-origins: "*"
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+  allowed-headers: "*"
+  allow-credentials: false
+
+# Configuracao de validacao
+validation:
+  sistema-id:
+    pattern: "^[A-Z]{3}-[0-9]{3}$"
+    message: "ID do sistema deve seguir o padrão XXX-000"
